@@ -12,6 +12,16 @@ public:
 	virtual void render(sf::RenderWindow &window) override;
 
 private:
+	void onBeat();
+
+	int level = 1;
+	float levelTimer = 10;
+	bool breakTime = false;
+	float beatTimer = 0;
+	float beatCounter = -1;
+
 	Transition trans;
+
+	sf::Music beat;
 };
 
