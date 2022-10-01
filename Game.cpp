@@ -2,7 +2,7 @@
 
 #include "State.hpp"
 #include "ResourceManager.hpp"
-//#include "PlayState.hpp"
+#include "MenuState.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -27,7 +27,7 @@ Game::Game() {
 	std::cout << "\n  Debug messages are printed here:\n";
 
 	// Initial state
-	//changeState(new PlayState());
+	changeState(new MenuState());
 
 	// Start the clock
 	sf::Clock clock;
