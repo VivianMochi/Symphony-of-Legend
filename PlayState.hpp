@@ -20,6 +20,8 @@ private:
 	float beatTimer = 0;
 	float beatCounter = -1;
 
+	std::string breakMessage = "";
+
 	Transition trans;
 
 	sf::Music beat;

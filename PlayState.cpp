@@ -36,6 +36,8 @@ void PlayState::update(sf::Time elapsed) {
 			breakTime = true;
 			levelTimer = 13.33 - beat.getPlayingOffset().asSeconds();
 			trans.cover();
+
+			breakMessage = "Level " + std::to_string(level) + " Complete!";
 		}
 	}
 
@@ -48,7 +50,7 @@ void PlayState::update(sf::Time elapsed) {
 	}
 
 	// Update level info
-	if (breakTime && levelTimer <= 1 && trans.isCovered()) {
+	if (breakTime && beatCounter >= 29 && trans.isCovered()) {
 		level += 1;
 		trans.reveal();
 	}
@@ -70,6 +72,28 @@ void PlayState::render(sf::RenderWindow &window) {
 
 	// Render transition
 	window.draw(trans);
+
+	// Render break text
+	if (beatCounter >= 26) {
+		text.setText(breakMessage);
+		text.setPosition(120 - text.getWidth() / 2, 38);
+		window.draw(text);
+	}
+	if (beatCounter >= 27) {
+		text.setText("Perfect: ???");
+		text.setPosition(120 - text.getWidth() / 2, 58);
+		window.draw(text);
+	}
+	if (beatCounter >= 28) {
+		text.setText("Attempts: ???");
+		text.setPosition(120 - text.getWidth() / 2, 68);
+		window.draw(text);
+	}
+	if (beatCounter >= 29) {
+		text.setText("Moving on!");
+		text.setPosition(120 - text.getWidth() / 2, 88);
+		window.draw(text);
+	}
 
 	// DEBUG
 	text.setText(std::to_string(levelTimer));
