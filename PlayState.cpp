@@ -6,8 +6,12 @@
 #include <iostream>
 
 const int BPM = 144;
+const float BEAT_TIME = 60.0f / BPM;
 
 void PlayState::init() {
+	legend.setState(this);
+	legend.setPosition(120, 74);
+
 	trans.cover(true);
 	trans.reveal();
 
@@ -17,7 +21,20 @@ void PlayState::init() {
 }
 
 void PlayState::gotEvent(sf::Event event) {
-
+	if (event.type == sf::Event::KeyPressed) {
+		if (event.key.code == sf::Keyboard::Up) {
+			legend.turn(0);
+		}
+		else if (event.key.code == sf::Keyboard::Right) {
+			legend.turn(1);
+		}
+		else if (event.key.code == sf::Keyboard::Down) {
+			legend.turn(2);
+		}
+		else if (event.key.code == sf::Keyboard::Left) {
+			legend.turn(3);
+		}
+	}
 }
 
 void PlayState::update(sf::Time elapsed) {
@@ -44,10 +61,12 @@ void PlayState::update(sf::Time elapsed) {
 	// Update beat timer
 	beatTimer -= elapsed.asSeconds();
 	if (beatTimer <= 0) {
-		beatTimer += 60.0f / BPM;
+		beatTimer += BEAT_TIME;
 		beatCounter += 1;
 		onBeat();
 	}
+
+	legend.update(elapsed);
 
 	// Update level info
 	if (breakTime && beatCounter >= 29 && trans.isCovered()) {
@@ -63,6 +82,8 @@ void PlayState::render(sf::RenderWindow &window) {
 	sf::RectangleShape backdrop(sf::Vector2f(240, 135));
 	backdrop.setFillColor(sf::Color(130, 190, 80));
 	window.draw(backdrop);
+
+	window.draw(legend);
 
 	// Render level name
 	BitmapText text(rm::loadTexture("Resource/Image/Font.png"), "Level " + std::to_string(level));
@@ -88,6 +109,7 @@ void PlayState::render(sf::RenderWindow &window) {
 		text.setText("Attempts: ???");
 		text.setPosition(120 - text.getWidth() / 2, 68);
 		window.draw(text);
+		// Todo: also show missed attacks?
 	}
 	if (beatCounter >= 29) {
 		text.setText("Moving on!");
@@ -102,6 +124,15 @@ void PlayState::render(sf::RenderWindow &window) {
 	text.setText(std::to_string((int)beatCounter));
 	text.setPosition(2, 115);
 	window.draw(text);
+}
+
+bool PlayState::isNearBeat(float window, bool onlyAfter) {
+	if (onlyAfter) {
+		return beatTimer > BEAT_TIME - window;
+	}
+	else {
+		return beatTimer < window || beatTimer > BEAT_TIME - window;
+	}
 }
 
 void PlayState::onBeat() {
