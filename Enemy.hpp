@@ -4,25 +4,27 @@
 
 class PlayState;
 
-class Legend : public sf::Drawable, public sf::Transformable {
+class Enemy : public sf::Drawable, public sf::Transformable {
 public:
-	Legend();
+	Enemy(std::string type = "Crab", float delay = 20);
 
 	void setState(PlayState *state);
 	void update(sf::Time elapsed);
 
-	// 0 = up
-	// 1 = right
-	// 2 = down
-	// 3 = left
-	void turn(int direction);
+	int side = 1;
+	int facing = 3;
 
 private:
 	virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
 	PlayState *state = nullptr;
 
-	int facing = 1;
+	float maxDelay = 20;
+	float delay = 20;
+	sf::Vector2f velocity;
+
+	int frame = 0;
+	float frameTimer = 0;
 
 	sf::Sprite sprite;
 };

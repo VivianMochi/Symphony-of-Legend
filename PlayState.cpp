@@ -5,12 +5,9 @@
 
 #include <iostream>
 
-const int BPM = 144;
-const float BEAT_TIME = 60.0f / BPM;
-
 void PlayState::init() {
 	legend.setState(this);
-	legend.setPosition(120, 74);
+	legend.setPosition(LEGEND_POSITION);
 
 	trans.cover(true);
 	trans.reveal();
@@ -66,12 +63,17 @@ void PlayState::update(sf::Time elapsed) {
 		onBeat();
 	}
 
-	legend.update(elapsed);
-
 	// Update level info
 	if (breakTime && beatCounter >= 29 && trans.isCovered()) {
+		enemies.clear();
 		level += 1;
 		trans.reveal();
+	}
+
+	// Update entities
+	legend.update(elapsed);
+	for (Enemy &enemy : enemies) {
+		enemy.update(elapsed);
 	}
 
 	trans.update(elapsed);
@@ -83,7 +85,11 @@ void PlayState::render(sf::RenderWindow &window) {
 	backdrop.setFillColor(sf::Color(130, 190, 80));
 	window.draw(backdrop);
 
+	// Render entities
 	window.draw(legend);
+	for (Enemy &enemy : enemies) {
+		window.draw(enemy);
+	}
 
 	// Render level name
 	BitmapText text(rm::loadTexture("Resource/Image/Font.png"), "Level " + std::to_string(level));
@@ -126,6 +132,17 @@ void PlayState::render(sf::RenderWindow &window) {
 	window.draw(text);
 }
 
+void PlayState::createEnemy(std::string type, int direction, float delayBeats) {
+	enemies.emplace_back(type, delayBeats * BEAT_TIME);
+	enemies.back().setState(this);
+	enemies.back().setPosition(LEGEND_POSITION + getDirectionVector(direction) * 60.0f);
+	enemies.back().side = direction;
+	enemies.back().facing = direction + 2;
+	if (enemies.back().facing >= 4) {
+		enemies.back().facing -= 4;
+	}
+}
+
 bool PlayState::isNearBeat(float window, bool onlyAfter) {
 	if (onlyAfter) {
 		return beatTimer > BEAT_TIME - window;
@@ -135,6 +152,32 @@ bool PlayState::isNearBeat(float window, bool onlyAfter) {
 	}
 }
 
+sf::Vector2f PlayState::getDirectionVector(int direction) {
+	if (direction == 0) {
+		return sf::Vector2f(0, -1);
+	}
+	else if (direction == 1) {
+		return sf::Vector2f(1, 0);
+	}
+	else if (direction == 2) {
+		return sf::Vector2f(0, 1);
+	}
+	else if (direction == 3) {
+		return sf::Vector2f(-1, 0);
+	}
+	return sf::Vector2f(0, 0);
+}
+
 void PlayState::onBeat() {
-	std::cout << (breakTime ? "Break - " : "Play - ") << beatCounter << " - " << levelTimer << "\n";
+	if (!breakTime) {
+		if (beatCounter == 4) {
+			createEnemy("Crab", 1, 8);
+		}
+		else if (beatCounter == 16) {
+			createEnemy("Crab", 1, 4);
+		}
+		else if (beatCounter == 17) {
+			createEnemy("Crab", 3, 4);
+		}
+	}
 }

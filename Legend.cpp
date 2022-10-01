@@ -35,5 +35,5 @@ void Legend::turn(int direction) {
 }
 
 void Legend::draw(sf::RenderTarget &target, sf::RenderStates states) const {
-	target.draw(sprite);
+	target.draw(sprite, states);
 }
