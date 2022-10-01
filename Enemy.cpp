@@ -23,7 +23,7 @@ void Enemy::update(sf::Time elapsed) {
 	// Update position
 	if (delay <= maxDelay / 2) {
 		if (delay >= 0) {
-			sf::Vector2f desiredVelocity = ((LEGEND_POSITION - getPosition()) / (delay + BEAT_TIME));
+			sf::Vector2f desiredVelocity = ((LEGEND_POSITION - getPosition()) / (delay + BEAT_TIME)) * 0.9f;
 			velocity += (desiredVelocity - velocity) * 0.1f * elapsed.asSeconds();
 			velocity = velocity * 0.9f;
 		}

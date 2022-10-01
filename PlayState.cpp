@@ -12,6 +12,8 @@ void PlayState::init() {
 	trans.cover(true);
 	trans.reveal();
 
+	crabSpawnSound.setBuffer(rm::loadSoundBuffer("Resource/Sound/CrabSpawn.wav"));
+
 	beat.openFromFile("Resource/Music/Beat.ogg");
 	beat.setLoop(true);
 	beat.play();
@@ -63,9 +65,10 @@ void PlayState::update(sf::Time elapsed) {
 		onBeat();
 	}
 
-	// Update level info
+	// Set up next level
 	if (breakTime && beatCounter >= 29 && trans.isCovered()) {
 		enemies.clear();
+		poofs.clear();
 		level += 1;
 		trans.reveal();
 	}
@@ -74,6 +77,9 @@ void PlayState::update(sf::Time elapsed) {
 	legend.update(elapsed);
 	for (Enemy &enemy : enemies) {
 		enemy.update(elapsed);
+	}
+	for (Poof &poof : poofs) {
+		poof.update(elapsed);
 	}
 
 	trans.update(elapsed);
@@ -89,6 +95,9 @@ void PlayState::render(sf::RenderWindow &window) {
 	window.draw(legend);
 	for (Enemy &enemy : enemies) {
 		window.draw(enemy);
+	}
+	for (Poof &poof : poofs) {
+		window.draw(poof);
 	}
 
 	// Render level name
@@ -141,6 +150,16 @@ void PlayState::createEnemy(std::string type, int direction, float delayBeats) {
 	if (enemies.back().facing >= 4) {
 		enemies.back().facing -= 4;
 	}
+
+	createPoof(enemies.back().getPosition() + sf::Vector2f(0, -6));
+
+	crabSpawnSound.setPitch(0.8 + std::rand() % 40 / 100.0f);
+	crabSpawnSound.play();
+}
+
+void PlayState::createPoof(sf::Vector2f position, float diameter) {
+	poofs.emplace_back(diameter);
+	poofs.back().setPosition(position);
 }
 
 bool PlayState::isNearBeat(float window, bool onlyAfter) {

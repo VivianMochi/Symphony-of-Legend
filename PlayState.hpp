@@ -5,6 +5,7 @@
 #include "Legend.hpp"
 #include "Transition.hpp"
 #include "Enemy.hpp"
+#include "Poof.hpp"
 
 const int BPM = 144;
 const float BEAT_TIME = 60.0f / BPM;
@@ -18,6 +19,7 @@ public:
 	virtual void render(sf::RenderWindow &window) override;
 
 	void createEnemy(std::string type, int direction, float delayBeats = 4);
+	void createPoof(sf::Vector2f position, float diameter = 12);
 
 	// Helpers
 	bool isNearBeat(float window = 0.05, bool onlyAfter = false);
@@ -36,7 +38,10 @@ private:
 
 	Legend legend;
 	std::vector<Enemy> enemies;
+	std::vector<Poof> poofs;
 	Transition trans;
+
+	sf::Sound crabSpawnSound;
 
 	sf::Music beat;
 };
