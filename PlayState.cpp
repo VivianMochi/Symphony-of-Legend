@@ -49,7 +49,8 @@ void PlayState::gotEvent(sf::Event event) {
 			attack(0);
 		}
 		else if (event.key.code == sf::Keyboard::X) {
-			attack(1);
+			// Shield isn't fully implemented
+			//attack(1);
 		}
 		else if (event.key.code == sf::Keyboard::Up) {
 			legend.turn(0);
@@ -69,6 +70,7 @@ void PlayState::gotEvent(sf::Event event) {
 		}
 
 		// DEBUG
+		/*
 		if (event.key.code == sf::Keyboard::Q) {
 			music.playRandomNote("Sword");
 		}
@@ -77,6 +79,7 @@ void PlayState::gotEvent(sf::Event event) {
 			beatCounter = 29;
 			trans.cover(true);
 		}
+		*/
 	}
 }
 
@@ -201,12 +204,14 @@ void PlayState::render(sf::RenderWindow &window) {
 	}
 
 	// DEBUG
+	/*
 	text.setText(std::to_string(beatCounter));
 	text.setPosition(2, 115);
 	//window.draw(text);
 	text.setText("Key: " + music.getKey());
 	text.setPosition(2, 125);
 	//window.draw(text);
+	*/
 }
 
 void PlayState::createEnemy(std::string type, int direction) {
@@ -341,10 +346,12 @@ void PlayState::onBeat() {
 
 	// Spawn enemies
 	std::vector<std::string> enemyTypes = { "Crab" };
-	if (level >= 1) {
+	if (level >= 3) {
+		// Used to be >= 1
 		enemyTypes.push_back("Hedgehog");
 	}
-	if (level >= 3) {
+	if (level >= 6) {
+		// Used to be >= 3
 		enemyTypes.push_back("Bird");
 	}
 	if (level >= 5) {
@@ -357,7 +364,7 @@ void PlayState::onBeat() {
 		//enemyTypes.push_back("Space");
 	}
 	if (!breakTime && (level > 0 || beatCounter >= 8)) {
-		if (beatCounter % 8 <= 3 && (std::rand() % 9 <= (level / 2) + 2) && beatCounter < 24) {
+		if (beatCounter % 8 <= 3 && (std::rand() % 6 <= (level / 2) + 2) && beatCounter < 24) {
 			createEnemy(enemyTypes[std::rand() % enemyTypes.size()], std::rand() % 4);
 		}
 	}

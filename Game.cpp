@@ -21,7 +21,10 @@ Game::Game() {
 
 	// Show the welcome message
 	std::cout << "\n  Welcome to Symphony of Legend!\n";
-	std::cout << "\n  Use the arrow keys to aim, and Z to attack!\n";
+	std::cout << "\n  Here are some tips:\n";
+	std::cout << "    - Use the arrow keys to aim, and Z to attack\n";
+	std::cout << "    - Enemies flash when they are vulnerable\n";
+	std::cout << "    - Different enemies have different patterns\n";
 	std::cout << "\n  Debug messages are printed here:\n";
 
 	// Initial state
