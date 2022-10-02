@@ -2,7 +2,7 @@
 
 #include "BitmapText.hpp"
 #include "ResourceManager.hpp"
-#include "MenuState.hpp"
+#include "CompleteState.hpp"
 
 #include <iostream>
 
@@ -108,11 +108,13 @@ void PlayState::update(sf::Time elapsed) {
 		enemies.clear();
 		poofs.clear();
 		if (legend.alive) {
+			allAttacks += totalAttacks;
+			allPerfect += perfect;
+			allMisses += misses;
 			level += 1;
 			if (level >= levels.size()) {
-				// Todo: show game end
 				level = levels.size() - 1;
-				getGame()->changeState(new MenuState());
+				getGame()->changeState(new CompleteState(allPerfect, allAttacks, allMisses));
 			}
 		}
 		totalAttacks = 0;
@@ -175,26 +177,27 @@ void PlayState::render(sf::RenderWindow &window) {
 	window.draw(trans);
 
 	// Render break text
-	if (beatCounter >= 26) {
-		text.setText(breakMessages[0]);
-		text.setPosition(120 - text.getWidth() / 2, 38);
-		window.draw(text);
-	}
-	if (beatCounter >= 27) {
-		text.setText(breakMessages[1]);
-		text.setPosition(120 - text.getWidth() / 2, 58);
-		window.draw(text);
-	}
-	if (beatCounter >= 28) {
-		text.setText(breakMessages[2]);
-		text.setPosition(120 - text.getWidth() / 2, 68);
-		window.draw(text);
-		// Todo: also show missed attacks?
-	}
-	if (beatCounter >= 29) {
-		text.setText(breakMessages[3]);
-		text.setPosition(120 - text.getWidth() / 2, 88);
-		window.draw(text);
+	if (!gameComplete) {
+		if (beatCounter >= 26) {
+			text.setText(breakMessages[0]);
+			text.setPosition(120 - text.getWidth() / 2, 38);
+			window.draw(text);
+		}
+		if (beatCounter >= 27) {
+			text.setText(breakMessages[1]);
+			text.setPosition(120 - text.getWidth() / 2, 58);
+			window.draw(text);
+		}
+		if (beatCounter >= 28) {
+			text.setText(breakMessages[2]);
+			text.setPosition(120 - text.getWidth() / 2, 68);
+			window.draw(text);
+		}
+		if (beatCounter >= 29) {
+			text.setText(breakMessages[3]);
+			text.setPosition(120 - text.getWidth() / 2, 88);
+			window.draw(text);
+		}
 	}
 
 	// DEBUG
@@ -241,7 +244,6 @@ void PlayState::loseLevel() {
 		createPoof(LEGEND_POSITION + sf::Vector2f(0, -6), 40);
 		deathSound.play();
 
-		// Todo: don't clear enemies here
 		enemies.clear();
 	}
 }
@@ -304,14 +306,16 @@ void PlayState::onBeat() {
 	}
 
 	// Play completion sounds
-	if (beatCounter == 24) {
-		music.playChordNote("Complete", 0);
-	}
-	else if (beatCounter >= 26 && beatCounter <= 29) {
-		music.playRandomNote("Complete");
-	}
-	else if (beatCounter == 30) {
-		music.playChordNote("Complete", 2);
+	if (!gameComplete) {
+		if (beatCounter == 24) {
+			music.playChordNote("Complete", 0);
+		}
+		else if (beatCounter >= 26 && beatCounter <= 29) {
+			music.playRandomNote("Complete");
+		}
+		else if (beatCounter == 30) {
+			music.playChordNote("Complete", 2);
+		}
 	}
 
 	// Go to break
@@ -319,6 +323,9 @@ void PlayState::onBeat() {
 		breakTime = true;
 		trans.cover();
 		if (legend.alive) {
+			if (level == levels.size() - 1) {
+				gameComplete = true;
+			}
 			breakMessages[0] = levels[level].name + " Complete!";
 			breakMessages[1] = "Perfect: " + std::to_string(perfect) + " of " + std::to_string(totalAttacks);
 			breakMessages[2] = "Misses: " + std::to_string(misses);

@@ -54,6 +54,10 @@ private:
 	int totalAttacks = 0;
 	int perfect = 0;
 	int misses = 0;
+	int allAttacks = 0;
+	int allPerfect = 0;
+	int allMisses = 0;
+	bool gameComplete = false;
 
 	bool breakTime = false;
 	float beatTimer = 0;
