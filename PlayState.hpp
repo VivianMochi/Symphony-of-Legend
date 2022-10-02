@@ -41,6 +41,10 @@ private:
 
 	int level = 1;
 	std::string areaName = "Mountain";
+	int totalAttacks = 0;
+	int perfect = 0;
+	int misses = 0;
+
 	bool breakTime = false;
 	float beatTimer = 0;
 	int beatCounter = -1;
@@ -51,8 +55,7 @@ private:
 	int attackFrame = 8;
 	float attackFrameTimer = 0;
 
-	std::string breakMessage1;
-	std::string breakMessage2;
+	std::vector<std::string> breakMessages;
 
 	Legend legend;
 	sf::Sprite attackSprite;

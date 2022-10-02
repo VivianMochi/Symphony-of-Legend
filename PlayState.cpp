@@ -6,6 +6,8 @@
 #include <iostream>
 
 void PlayState::init() {
+	breakMessages.resize(4);
+
 	legend.setState(this);
 	legend.setPosition(LEGEND_POSITION);
 
@@ -55,8 +57,12 @@ void PlayState::gotEvent(sf::Event event) {
 
 void PlayState::update(sf::Time elapsed) {
 	// Update input buffer
-	// Todo: if buffer expires, add to missed attack count
+	float lastBuffer = attackBuffer;
 	attackBuffer -= elapsed.asSeconds();
+	if (lastBuffer > 0 && attackBuffer <= 0) {
+		// Last buffer was not consumed, add a miss
+		misses += 1;
+	}
 
 	// Update beat timer
 	beatTimer -= elapsed.asSeconds();
@@ -79,6 +85,9 @@ void PlayState::update(sf::Time elapsed) {
 		if (legend.alive) {
 			level += 1;
 		}
+		totalAttacks = 0;
+		perfect = 0;
+		misses = 0;
 		legend.alive = true;
 		trans.reveal();
 	}
@@ -137,23 +146,23 @@ void PlayState::render(sf::RenderWindow &window) {
 
 	// Render break text
 	if (beatCounter >= 26) {
-		text.setText(breakMessage1);
+		text.setText(breakMessages[0]);
 		text.setPosition(120 - text.getWidth() / 2, 38);
 		window.draw(text);
 	}
 	if (beatCounter >= 27) {
-		text.setText("Perfect: ???");
+		text.setText(breakMessages[1]);
 		text.setPosition(120 - text.getWidth() / 2, 58);
 		window.draw(text);
 	}
 	if (beatCounter >= 28) {
-		text.setText("Attempts: ???");
+		text.setText(breakMessages[2]);
 		text.setPosition(120 - text.getWidth() / 2, 68);
 		window.draw(text);
 		// Todo: also show missed attacks?
 	}
 	if (beatCounter >= 29) {
-		text.setText(breakMessage2);
+		text.setText(breakMessages[3]);
 		text.setPosition(120 - text.getWidth() / 2, 88);
 		window.draw(text);
 	}
@@ -271,12 +280,16 @@ void PlayState::onBeat() {
 		breakTime = true;
 		trans.cover();
 		if (legend.alive) {
-			breakMessage1 = "Level " + std::to_string(level) + " Complete!";
-			breakMessage2 = "Moving on!";
+			breakMessages[0] = "Level " + std::to_string(level) + " Complete!";
+			breakMessages[1] = "Perfect: " + std::to_string(perfect) + " of " + std::to_string(totalAttacks);
+			breakMessages[2] = "Misses: " + std::to_string(misses);
+			breakMessages[3] = "Moving on!";
 		}
 		else {
-			breakMessage1 = "You died!";
-			breakMessage2 = "Let's go again!";
+			breakMessages[0] = "You died!";
+			breakMessages[1] = "";
+			breakMessages[2] = "";
+			breakMessages[3] = "Try again!";
 		}
 	}
 
@@ -291,7 +304,10 @@ void PlayState::onBeat() {
 
 void PlayState::attack(int type) {
 	if (legend.alive) {
-		// Todo: Add to miss count if buffer isn't expired
+		totalAttacks += 1;
+		if (attackBuffer > 0) {
+			misses += 1;
+		}
 		attackBuffer = INPUT_BUFFER_TIME;
 		attackType = type;
 		attackDirection = legend.facing;
@@ -308,6 +324,9 @@ void PlayState::doBufferInput() {
 
 		for (Enemy &enemy : enemies) {
 			if (enemy.alive && enemy.side == attackDirection && enemy.getDelay() <= OK_WINDOW) {
+				if (enemy.getDelay() >= -PERFECT_WINDOW && enemy.getDelay() <= PERFECT_WINDOW) {
+					perfect += 1;
+				}
 				attackBuffer = 0;
 				enemy.hit(attackType);
 				music.playRandomNote(attackType == 0 ? "Sword" : "Shield");
