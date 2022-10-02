@@ -9,6 +9,9 @@ void PlayState::init() {
 	legend.setState(this);
 	legend.setPosition(LEGEND_POSITION);
 
+	attackSprite.setTexture(rm::loadTexture("Resource/Image/Attacks.png"));
+	attackSprite.setOrigin(6, 6);
+
 	trans.cover(true);
 	trans.reveal();
 
@@ -21,31 +24,26 @@ void PlayState::init() {
 void PlayState::gotEvent(sf::Event event) {
 	if (event.type == sf::Event::KeyPressed) {
 		if (event.key.code == sf::Keyboard::Z) {
-			// Todo: check if any buffers are not expired, add those to missed count
-			swordBuffer = INPUT_BUFFER_TIME;
-			shieldBuffer = 0;
-			doInputFromBuffers();
+			attack(0);
 		}
 		else if (event.key.code == sf::Keyboard::X) {
-			swordBuffer = 0;
-			shieldBuffer = INPUT_BUFFER_TIME;
-			doInputFromBuffers();
+			attack(1);
 		}
 		else if (event.key.code == sf::Keyboard::Up) {
 			legend.turn(0);
-			doInputFromBuffers();
+			doBufferInput();
 		}
 		else if (event.key.code == sf::Keyboard::Right) {
 			legend.turn(1);
-			doInputFromBuffers();
+			doBufferInput();
 		}
 		else if (event.key.code == sf::Keyboard::Down) {
 			legend.turn(2);
-			doInputFromBuffers();
+			doBufferInput();
 		}
 		else if (event.key.code == sf::Keyboard::Left) {
 			legend.turn(3);
-			doInputFromBuffers();
+			doBufferInput();
 		}
 
 		// DEBUG
@@ -56,46 +54,22 @@ void PlayState::gotEvent(sf::Event event) {
 }
 
 void PlayState::update(sf::Time elapsed) {
-	// Update input buffers
+	// Update input buffer
 	// Todo: if buffer expires, add to missed attack count
-	swordBuffer -= elapsed.asSeconds();
-	shieldBuffer -= elapsed.asSeconds();
-
-	// Update level timer
-	levelTimer -= elapsed.asSeconds();
-	if (levelTimer <= 0) {
-		if (breakTime) {
-			// Start level
-			breakTime = false;
-			levelTimer += 10;
-			beatTimer = 0;
-			beatCounter = -1;
-		}
-		else {
-			// Go to break
-			breakTime = true;
-			levelTimer += 3.33;
-			trans.cover();
-
-			if (legend.alive) {
-				breakMessage1 = "Level " + std::to_string(level) + " Complete!";
-				breakMessage2 = "Moving on!";
-			}
-			else {
-				breakMessage1 = "You died!";
-				breakMessage2 = "Let's go again!";
-			}
-		}
-	}
+	attackBuffer -= elapsed.asSeconds();
 
 	// Update beat timer
 	beatTimer -= elapsed.asSeconds();
 	if (beatTimer <= 0) {
 		beatTimer += BEAT_TIME;
 		beatCounter += 1;
-		if (beatCounter <= 31) {
-			onBeat();
+		if (beatCounter == 32) {
+			// Start level
+			breakTime = false;
+			beatTimer = BEAT_TIME;
+			beatCounter = 0;
 		}
+		onBeat();
 	}
 
 	// Set up next level
@@ -118,6 +92,19 @@ void PlayState::update(sf::Time elapsed) {
 		poof.update(elapsed);
 	}
 
+	// Update attack sprite
+	attackFrameTimer -= elapsed.asSeconds();
+	if (attackFrameTimer <= 0) {
+		attackFrameTimer += BEAT_TIME / 8.0f;
+		attackFrame += 1;
+		if (attackFrame >= 9) {
+			attackFrame = 8;
+		}
+	}
+	attackSprite.setTextureRect(sf::IntRect(attackFrame * 12, attackType * 12, 12, 12));
+	attackSprite.setPosition(LEGEND_POSITION + sf::Vector2f(0, -6) + getDirectionVector(attackDirection) * 12.0f);
+	attackSprite.setRotation(90 * (attackDirection - 1));
+
 	trans.update(elapsed);
 }
 
@@ -134,6 +121,9 @@ void PlayState::render(sf::RenderWindow &window) {
 	}
 	for (Poof &poof : poofs) {
 		window.draw(poof);
+	}
+	if (attackFrame < 4 || (attackFrame < 8 && std::rand() % 2)) {
+		window.draw(attackSprite);
 	}
 
 	// Render level name
@@ -169,9 +159,6 @@ void PlayState::render(sf::RenderWindow &window) {
 	}
 
 	// DEBUG
-	text.setText(std::to_string(levelTimer));
-	text.setPosition(2, 125);
-	//window.draw(text);
 	text.setText(std::to_string(beatCounter));
 	text.setPosition(2, 115);
 	//window.draw(text);
@@ -206,6 +193,7 @@ void PlayState::createPoof(sf::Vector2f position, float diameter) {
 void PlayState::loseLevel() {
 	if (legend.alive && !breakTime) {
 		legend.alive = false;
+		beatCounter = 22;
 		createPoof(LEGEND_POSITION + sf::Vector2f(0, -6), 24);
 
 		// Todo: don't clear enemies here
@@ -281,19 +269,44 @@ void PlayState::onBeat() {
 	if (beatCounter >= 26 && beatCounter <= 29) {
 		music.playRandomNote("Complete");
 	}
+
+	// Go to break
+	if (beatCounter == 24) {
+		breakTime = true;
+		trans.cover();
+		if (legend.alive) {
+			breakMessage1 = "Level " + std::to_string(level) + " Complete!";
+			breakMessage2 = "Moving on!";
+		}
+		else {
+			breakMessage1 = "You died!";
+			breakMessage2 = "Let's go again!";
+		}
+	}
 }
 
-void PlayState::doInputFromBuffers() {
+void PlayState::attack(int type) {
 	if (legend.alive) {
-		int direction = legend.facing;
+		// Todo: Add to miss count if buffer isn't expired
+		attackBuffer = INPUT_BUFFER_TIME;
+		attackType = type;
+		attackDirection = legend.facing;
+		attackFrame = -1;
+		attackFrameTimer = 0;
+
+		doBufferInput();
+	}
+}
+
+void PlayState::doBufferInput() {
+	if (legend.alive && attackBuffer > 0) {
+		attackDirection = legend.facing;
+
 		for (Enemy &enemy : enemies) {
-			if (enemy.alive && enemy.side == direction && enemy.getDelay() <= OK_WINDOW) {
-				if (swordBuffer > 0) {
-					swordBuffer = 0;
-					enemy.alive = false;
-					createPoof(enemy.getPosition() + sf::Vector2f(0, -6));
-					music.playRandomNote("Sword");
-				}
+			if (enemy.alive && enemy.side == attackDirection && enemy.getDelay() <= OK_WINDOW) {
+				attackBuffer = 0;
+				enemy.hit(attackType);
+				music.playRandomNote(attackType == 0 ? "Sword" : "Shield");
 			}
 		}
 	}

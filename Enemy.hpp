@@ -11,6 +11,8 @@ public:
 	void setState(PlayState *state);
 	void update(sf::Time elapsed);
 
+	void hit(int damageType);
+
 	float getDelay();
 
 	bool alive = true;

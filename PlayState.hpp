@@ -34,22 +34,27 @@ public:
 private:
 	void onBeat();
 
-	void doInputFromBuffers();
+	// 0 = sword
+	// 1 = shield
+	void attack(int type = 0);
+	void doBufferInput();
 
 	int level = 1;
-	float levelTimer = 10;
 	bool breakTime = false;
 	float beatTimer = 0;
 	int beatCounter = -1;
 
-	// Input buffers
-	float swordBuffer = 0;
-	float shieldBuffer = 0;
+	float attackBuffer = 0;
+	int attackType = 0;
+	int attackDirection = 0;
+	int attackFrame = 8;
+	float attackFrameTimer = 0;
 
 	std::string breakMessage1;
 	std::string breakMessage2;
 
 	Legend legend;
+	sf::Sprite attackSprite;
 	std::vector<Enemy> enemies;
 	std::vector<Poof> poofs;
 	Transition trans;

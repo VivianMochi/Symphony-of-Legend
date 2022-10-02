@@ -24,7 +24,9 @@ void Enemy::update(sf::Time elapsed) {
 		// Update death
 		if (delay <= -BEAT_TIME) {
 			alive = false;
-			state->loseLevel();
+			if (state) {
+				state->loseLevel();
+			}
 		}
 
 		// Update position
@@ -61,6 +63,21 @@ void Enemy::update(sf::Time elapsed) {
 		sprite.setTextureRect(sf::IntRect(12 * spriteXIndex, 12 * spriteYIndex, 12, 12));
 		sprite.setScale((facing == 3 ? -1 : 1), 1);
 		sprite.setPosition(getPosition());
+	}
+}
+
+void Enemy::hit(int damageType) {
+	if (state) {
+		if (damageType == 0) {
+			alive = false;
+			state->createPoof(getPosition() + sf::Vector2f(0, -6));
+		}
+		else if (damageType == 1) {
+			state->createPoof(getPosition() + sf::Vector2f(0, -6), 8);
+			move(state->getDirectionVector(side) * 10.0f);
+			velocity = state->getDirectionVector(side) * 2.0f;
+			delay += BEAT_TIME * 4;
+		}
 	}
 }
 
