@@ -17,7 +17,7 @@ void PlayState::init() {
 	trans.cover(true);
 	trans.reveal();
 
-	metronome.setBuffer(rm::loadSoundBuffer("Resource/Sound/Metronome.wav"));
+	deathSound.setBuffer(rm::loadSoundBuffer("Resource/Sound/Death.wav"));
 	poofSound.setBuffer(rm::loadSoundBuffer("Resource/Sound/Poof.wav"));
 
 	music.setKey("C5");
@@ -205,8 +205,10 @@ void PlayState::createPoof(sf::Vector2f position, float diameter) {
 void PlayState::loseLevel() {
 	if (legend.alive && !breakTime) {
 		legend.alive = false;
-		beatCounter = 22;
+		beatCounter = 20;
 		createPoof(LEGEND_POSITION + sf::Vector2f(0, -6), 24);
+		createPoof(LEGEND_POSITION + sf::Vector2f(0, -6), 40);
+		deathSound.play();
 
 		// Todo: don't clear enemies here
 		enemies.clear();
@@ -242,24 +244,32 @@ void PlayState::onBeat() {
 	// Adjust chord progression
 	if (beatCounter == 0) {
 		music.setChordByCode("1");
+		music.setChord({ 2, 5, 9 });
 	}
 	else if (beatCounter == 8) {
 		music.setChordByCode("4");
+		music.setChord({ 2, 4, 7 });
 	}
 	else if (beatCounter == 16) {
 		music.setChordByCode("2m");
+		music.setChord({ -2, 0, 5 });
 	}
 	else if (beatCounter == 24) {
 		music.setChord({0, 4, 7, 10}, 7);
+		music.setChord({ -3, 0, 5 });
 	}
 
 	// Play beat
-	//metronome.play();
 	std::string beatPattern = "0--2--0-";
 	beatPattern = "0-1-2-0-";
-	if (beatPattern != "") {
+	beatPattern = "C000C202";
+	if (beatPattern != "" && (legend.alive || beatCounter >= 24)) {
 		int index = beatCounter % beatPattern.size();
-		if (beatPattern[index] != '-') {
+		if (beatPattern[index] == 'C') {
+			music.playChord("Complete");
+			music.playChordNote(areaName);
+		}
+		else if (beatPattern[index] != '-') {
 			music.playChordNote(areaName, beatPattern[index] - '0');
 		}
 	}

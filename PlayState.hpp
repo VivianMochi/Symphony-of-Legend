@@ -63,7 +63,7 @@ private:
 	std::vector<Poof> poofs;
 	Transition trans;
 
-	sf::Sound metronome;
+	sf::Sound deathSound;
 	sf::Sound poofSound;
 
 	MusicManager music;
