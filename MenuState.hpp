@@ -16,7 +16,5 @@ private:
 	bool transitioning = false;
 
 	Transition trans;
-
-	sf::Music music;
 };
 
