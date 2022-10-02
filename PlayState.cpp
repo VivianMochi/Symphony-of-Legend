@@ -227,19 +227,22 @@ sf::Vector2f PlayState::getDirectionVector(int direction) {
 }
 
 void PlayState::onBeat() {
-	std::string enemyType = "Crab";
-	if (level % 2 == 0) {
-		enemyType = "Bird";
-	}
+	std::vector<std::string> enemyTypes = { "Crab", "Bird" };
 	if (!breakTime) {
+		/*
 		if (beatCounter == 4) {
-			createEnemy(enemyType, 1, 8);
+			createEnemy("Crab", 1, 8);
 		}
 		else if (beatCounter == 16) {
-			createEnemy(enemyType, 1, 4);
+			createEnemy("Crab", 1, 4);
 		}
 		else if (beatCounter == 17) {
-			createEnemy(enemyType, 3, 4);
+			createEnemy("Crab", 3, 4);
+		}
+		*/
+
+		if (beatCounter % 8 <= 3 && std::rand() % 4 && beatCounter < 24) {
+			createEnemy("Crab", std::rand() % 4, 4);
 		}
 	}
 

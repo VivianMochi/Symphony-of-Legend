@@ -77,6 +77,7 @@ void Enemy::hit(int damageType) {
 			move(state->getDirectionVector(side) * 10.0f);
 			velocity = state->getDirectionVector(side) * 2.0f;
 			delay += BEAT_TIME * 4;
+			maxDelay = BEAT_TIME * 16;
 		}
 	}
 }
