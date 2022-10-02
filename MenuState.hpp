@@ -12,7 +12,8 @@ public:
 	virtual void render(sf::RenderWindow &window) override;
 
 private:
-	float timer = 0;
+	float flashTimer = 0;
+	bool transitioning = false;
 
 	Transition trans;
 };

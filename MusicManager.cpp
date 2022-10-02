@@ -58,9 +58,15 @@ void MusicManager::playNote(std::string instrument, int offset) {
 	}
 }
 
-void MusicManager::playChordBase(std::string instrument) {
+void MusicManager::playChordNote(std::string instrument, int index) {
 	if (!chord.empty()) {
-		playNote(instrument, chord[0]);
+		if (index < 0) {
+			index = 0;
+		}
+		if (index >= chord.size()) {
+			index = chord.size() - 1;
+		}
+		playNote(instrument, chord[index]);
 	}
 }
 

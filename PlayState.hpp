@@ -40,6 +40,7 @@ private:
 	void doBufferInput();
 
 	int level = 1;
+	std::string areaName = "Mountain";
 	bool breakTime = false;
 	float beatTimer = 0;
 	int beatCounter = -1;
@@ -60,7 +61,7 @@ private:
 	Transition trans;
 
 	sf::Sound metronome;
-	sf::Sound crabSpawnSound;
+	sf::Sound poofSound;
 
 	MusicManager music;
 };

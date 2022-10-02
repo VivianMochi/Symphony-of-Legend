@@ -16,7 +16,7 @@ void PlayState::init() {
 	trans.reveal();
 
 	metronome.setBuffer(rm::loadSoundBuffer("Resource/Sound/Metronome.wav"));
-	crabSpawnSound.setBuffer(rm::loadSoundBuffer("Resource/Sound/CrabSpawn.wav"));
+	poofSound.setBuffer(rm::loadSoundBuffer("Resource/Sound/Poof.wav"));
 
 	music.setKey("C5");
 }
@@ -180,8 +180,10 @@ void PlayState::createEnemy(std::string type, int direction, float delayBeats) {
 
 		createPoof(enemies.back().getPosition() + sf::Vector2f(0, -6));
 
-		crabSpawnSound.setPitch(0.8 + std::rand() % 40 / 100.0f);
-		crabSpawnSound.play();
+		poofSound.setPitch(0.8 + std::rand() % 40 / 100.0f);
+		poofSound.play();
+
+		music.playRandomNote(type);
 	}
 }
 
@@ -227,25 +229,6 @@ sf::Vector2f PlayState::getDirectionVector(int direction) {
 }
 
 void PlayState::onBeat() {
-	std::vector<std::string> enemyTypes = { "Crab", "Bird" };
-	if (!breakTime) {
-		/*
-		if (beatCounter == 4) {
-			createEnemy("Crab", 1, 8);
-		}
-		else if (beatCounter == 16) {
-			createEnemy("Crab", 1, 4);
-		}
-		else if (beatCounter == 17) {
-			createEnemy("Crab", 3, 4);
-		}
-		*/
-
-		if (beatCounter % 8 <= 3 && std::rand() % 4 && beatCounter < 24) {
-			createEnemy("Crab", std::rand() % 4, 4);
-		}
-	}
-
 	// Adjust chord progression
 	if (beatCounter == 0) {
 		music.setChordByCode("1");
@@ -262,15 +245,24 @@ void PlayState::onBeat() {
 
 	// Play beat
 	//metronome.play();
-	if (beatCounter % 2 == 0) {
-		music.playChordBase("Bass");
-	}
-	if (beatCounter % 4 == 0) {
-		//music.playChord("Complete");
+	std::string beatPattern = "0--2--0-";
+	beatPattern = "0-1-2-0-";
+	if (beatPattern != "") {
+		int index = beatCounter % beatPattern.size();
+		if (beatPattern[index] != '-') {
+			music.playChordNote(areaName, beatPattern[index] - '0');
+		}
 	}
 
-	if (beatCounter >= 26 && beatCounter <= 29) {
+	// Play completion sounds
+	if (beatCounter == 24) {
+		music.playChordNote("Complete", 0);
+	}
+	else if (beatCounter >= 26 && beatCounter <= 29) {
 		music.playRandomNote("Complete");
+	}
+	else if (beatCounter == 30) {
+		music.playChordNote("Complete", 2);
 	}
 
 	// Go to break
@@ -284,6 +276,26 @@ void PlayState::onBeat() {
 		else {
 			breakMessage1 = "You died!";
 			breakMessage2 = "Let's go again!";
+		}
+	}
+
+	// Spawn enemies
+	std::vector<std::string> enemyTypes = { "Crab", "Bird" };
+	if (!breakTime) {
+		/*
+		if (beatCounter == 4) {
+			createEnemy("Crab", 1, 8);
+		}
+		else if (beatCounter == 16) {
+			createEnemy("Crab", 1, 4);
+		}
+		else if (beatCounter == 17) {
+			createEnemy("Crab", 3, 4);
+		}
+		*/
+
+		if (beatCounter % 8 <= 3 && std::rand() % 4 && beatCounter < 24) {
+			createEnemy("Crab", std::rand() % 4, 4);
 		}
 	}
 }

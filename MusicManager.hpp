@@ -14,7 +14,7 @@ public:
 	void setChord(std::vector<int>, int offset = 0);
 
 	void playNote(std::string instrument, int offset = 0);
-	void playChordBase(std::string instrument);
+	void playChordNote(std::string instrument, int index = 0);
 	void playChord(std::string instrument);
 	void playRandomNote(std::string instrument);
 
