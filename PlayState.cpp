@@ -21,22 +21,40 @@ void PlayState::init() {
 
 void PlayState::gotEvent(sf::Event event) {
 	if (event.type == sf::Event::KeyPressed) {
-		if (event.key.code == sf::Keyboard::Up) {
+		if (event.key.code == sf::Keyboard::Z) {
+			swordBuffer = INPUT_BUFFER_TIME;
+			shieldBuffer = 0;
+			doInputFromBuffers();
+		}
+		if (event.key.code == sf::Keyboard::X) {
+			swordBuffer = 0;
+			shieldBuffer = INPUT_BUFFER_TIME;
+			doInputFromBuffers();
+		}
+		else if (event.key.code == sf::Keyboard::Up) {
 			legend.turn(0);
+			doInputFromBuffers();
 		}
 		else if (event.key.code == sf::Keyboard::Right) {
 			legend.turn(1);
+			doInputFromBuffers();
 		}
 		else if (event.key.code == sf::Keyboard::Down) {
 			legend.turn(2);
+			doInputFromBuffers();
 		}
 		else if (event.key.code == sf::Keyboard::Left) {
 			legend.turn(3);
+			doInputFromBuffers();
 		}
 	}
 }
 
 void PlayState::update(sf::Time elapsed) {
+	// Update input buffers
+	swordBuffer -= elapsed.asSeconds();
+	shieldBuffer -= elapsed.asSeconds();
+
 	// Update level timer
 	levelTimer -= elapsed.asSeconds();
 	if (levelTimer <= 0) {
@@ -53,7 +71,14 @@ void PlayState::update(sf::Time elapsed) {
 			levelTimer = 13.33 - beat.getPlayingOffset().asSeconds();
 			trans.cover();
 
-			breakMessage = "Level " + std::to_string(level) + " Complete!";
+			if (legend.alive) {
+				breakMessage1 = "Level " + std::to_string(level) + " Complete!";
+				breakMessage2 = "Moving on!";
+			}
+			else {
+				breakMessage1 = "You died!";
+				breakMessage2 = "Let's go again!";
+			}
 		}
 	}
 
@@ -69,7 +94,10 @@ void PlayState::update(sf::Time elapsed) {
 	if (breakTime && beatCounter >= 29 && trans.isCovered()) {
 		enemies.clear();
 		poofs.clear();
-		level += 1;
+		if (legend.alive) {
+			level += 1;
+		}
+		legend.alive = true;
 		trans.reveal();
 	}
 
@@ -111,7 +139,7 @@ void PlayState::render(sf::RenderWindow &window) {
 
 	// Render break text
 	if (beatCounter >= 26) {
-		text.setText(breakMessage);
+		text.setText(breakMessage1);
 		text.setPosition(120 - text.getWidth() / 2, 38);
 		window.draw(text);
 	}
@@ -127,7 +155,7 @@ void PlayState::render(sf::RenderWindow &window) {
 		// Todo: also show missed attacks?
 	}
 	if (beatCounter >= 29) {
-		text.setText("Moving on!");
+		text.setText(breakMessage2);
 		text.setPosition(120 - text.getWidth() / 2, 88);
 		window.draw(text);
 	}
@@ -135,31 +163,43 @@ void PlayState::render(sf::RenderWindow &window) {
 	// DEBUG
 	text.setText(std::to_string(levelTimer));
 	text.setPosition(2, 125);
-	window.draw(text);
+	//window.draw(text);
 	text.setText(std::to_string((int)beatCounter));
 	text.setPosition(2, 115);
-	window.draw(text);
+	//window.draw(text);
 }
 
 void PlayState::createEnemy(std::string type, int direction, float delayBeats) {
-	enemies.emplace_back(type, delayBeats * BEAT_TIME);
-	enemies.back().setState(this);
-	enemies.back().setPosition(LEGEND_POSITION + getDirectionVector(direction) * 60.0f);
-	enemies.back().side = direction;
-	enemies.back().facing = direction + 2;
-	if (enemies.back().facing >= 4) {
-		enemies.back().facing -= 4;
+	if (legend.alive) {
+		enemies.emplace_back(type, delayBeats * BEAT_TIME);
+		enemies.back().setState(this);
+		enemies.back().setPosition(LEGEND_POSITION + getDirectionVector(direction) * 60.0f);
+		enemies.back().side = direction;
+		enemies.back().facing = direction + 2;
+		if (enemies.back().facing >= 4) {
+			enemies.back().facing -= 4;
+		}
+
+		createPoof(enemies.back().getPosition() + sf::Vector2f(0, -6));
+
+		crabSpawnSound.setPitch(0.8 + std::rand() % 40 / 100.0f);
+		crabSpawnSound.play();
 	}
-
-	createPoof(enemies.back().getPosition() + sf::Vector2f(0, -6));
-
-	crabSpawnSound.setPitch(0.8 + std::rand() % 40 / 100.0f);
-	crabSpawnSound.play();
 }
 
 void PlayState::createPoof(sf::Vector2f position, float diameter) {
 	poofs.emplace_back(diameter);
 	poofs.back().setPosition(position);
+}
+
+void PlayState::loseLevel() {
+	if (legend.alive && !breakTime) {
+		legend.alive = false;
+		createPoof(LEGEND_POSITION + sf::Vector2f(0, -6), 24);
+
+		// Todo: don't clear enemies here
+		enemies.clear();
+	}
 }
 
 bool PlayState::isNearBeat(float window, bool onlyAfter) {
@@ -188,15 +228,33 @@ sf::Vector2f PlayState::getDirectionVector(int direction) {
 }
 
 void PlayState::onBeat() {
+	std::string enemyType = "Crab";
+	if (level % 2 == 0) {
+		enemyType = "Bird";
+	}
 	if (!breakTime) {
 		if (beatCounter == 4) {
-			createEnemy("Crab", 1, 8);
+			createEnemy(enemyType, 1, 8);
 		}
 		else if (beatCounter == 16) {
-			createEnemy("Crab", 1, 4);
+			createEnemy(enemyType, 1, 4);
 		}
 		else if (beatCounter == 17) {
-			createEnemy("Crab", 3, 4);
+			createEnemy(enemyType, 3, 4);
+		}
+	}
+}
+
+void PlayState::doInputFromBuffers() {
+	if (legend.alive) {
+		int direction = legend.facing;
+		for (Enemy &enemy : enemies) {
+			if (enemy.alive && enemy.side == direction && enemy.getDelay() <= OK_WINDOW) {
+				if (swordBuffer > 0) {
+					enemy.alive = false;
+					createPoof(enemy.getPosition() + sf::Vector2f(0, -6));
+				}
+			}
 		}
 	}
 }

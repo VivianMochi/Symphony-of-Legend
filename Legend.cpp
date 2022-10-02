@@ -35,5 +35,7 @@ void Legend::turn(int direction) {
 }
 
 void Legend::draw(sf::RenderTarget &target, sf::RenderStates states) const {
-	target.draw(sprite, states);
+	if (alive) {
+		target.draw(sprite, states);
+	}
 }

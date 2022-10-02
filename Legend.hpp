@@ -17,12 +17,13 @@ public:
 	// 3 = left
 	void turn(int direction);
 
+	bool alive = true;
+	int facing = 1;
+
 private:
 	virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
 	PlayState *state = nullptr;
-
-	int facing = 1;
 
 	sf::Sprite sprite;
 };

@@ -11,6 +11,9 @@ public:
 	void setState(PlayState *state);
 	void update(sf::Time elapsed);
 
+	float getDelay();
+
+	bool alive = true;
 	int side = 1;
 	int facing = 3;
 
