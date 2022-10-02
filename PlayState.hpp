@@ -6,6 +6,7 @@
 #include "Transition.hpp"
 #include "Enemy.hpp"
 #include "Poof.hpp"
+#include "MusicManager.hpp"
 
 const int BPM = 144;
 const float BEAT_TIME = 60.0f / BPM;
@@ -39,7 +40,7 @@ private:
 	float levelTimer = 10;
 	bool breakTime = false;
 	float beatTimer = 0;
-	float beatCounter = -1;
+	int beatCounter = -1;
 
 	// Input buffers
 	float swordBuffer = 0;
@@ -53,8 +54,9 @@ private:
 	std::vector<Poof> poofs;
 	Transition trans;
 
+	sf::Sound metronome;
 	sf::Sound crabSpawnSound;
 
-	sf::Music beat;
+	MusicManager music;
 };
 

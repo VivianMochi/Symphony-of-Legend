@@ -12,21 +12,21 @@ void PlayState::init() {
 	trans.cover(true);
 	trans.reveal();
 
+	metronome.setBuffer(rm::loadSoundBuffer("Resource/Sound/Metronome.wav"));
 	crabSpawnSound.setBuffer(rm::loadSoundBuffer("Resource/Sound/CrabSpawn.wav"));
 
-	beat.openFromFile("Resource/Music/Beat.ogg");
-	beat.setLoop(true);
-	beat.play();
+	music.setKey("C5");
 }
 
 void PlayState::gotEvent(sf::Event event) {
 	if (event.type == sf::Event::KeyPressed) {
 		if (event.key.code == sf::Keyboard::Z) {
+			// Todo: check if any buffers are not expired, add those to missed count
 			swordBuffer = INPUT_BUFFER_TIME;
 			shieldBuffer = 0;
 			doInputFromBuffers();
 		}
-		if (event.key.code == sf::Keyboard::X) {
+		else if (event.key.code == sf::Keyboard::X) {
 			swordBuffer = 0;
 			shieldBuffer = INPUT_BUFFER_TIME;
 			doInputFromBuffers();
@@ -47,11 +47,17 @@ void PlayState::gotEvent(sf::Event event) {
 			legend.turn(3);
 			doInputFromBuffers();
 		}
+
+		// DEBUG
+		if (event.key.code == sf::Keyboard::Q) {
+			music.playRandomNote("Sword");
+		}
 	}
 }
 
 void PlayState::update(sf::Time elapsed) {
 	// Update input buffers
+	// Todo: if buffer expires, add to missed attack count
 	swordBuffer -= elapsed.asSeconds();
 	shieldBuffer -= elapsed.asSeconds();
 
@@ -68,7 +74,7 @@ void PlayState::update(sf::Time elapsed) {
 		else {
 			// Go to break
 			breakTime = true;
-			levelTimer = 13.33 - beat.getPlayingOffset().asSeconds();
+			levelTimer += 3.33;
 			trans.cover();
 
 			if (legend.alive) {
@@ -87,7 +93,9 @@ void PlayState::update(sf::Time elapsed) {
 	if (beatTimer <= 0) {
 		beatTimer += BEAT_TIME;
 		beatCounter += 1;
-		onBeat();
+		if (beatCounter <= 31) {
+			onBeat();
+		}
 	}
 
 	// Set up next level
@@ -164,8 +172,11 @@ void PlayState::render(sf::RenderWindow &window) {
 	text.setText(std::to_string(levelTimer));
 	text.setPosition(2, 125);
 	//window.draw(text);
-	text.setText(std::to_string((int)beatCounter));
+	text.setText(std::to_string(beatCounter));
 	text.setPosition(2, 115);
+	//window.draw(text);
+	text.setText("Key: " + music.getKey());
+	text.setPosition(2, 125);
 	//window.draw(text);
 }
 
@@ -243,6 +254,33 @@ void PlayState::onBeat() {
 			createEnemy(enemyType, 3, 4);
 		}
 	}
+
+	// Adjust chord progression
+	if (beatCounter == 0) {
+		music.setChordByCode("1");
+	}
+	else if (beatCounter == 8) {
+		music.setChordByCode("4");
+	}
+	else if (beatCounter == 16) {
+		music.setChordByCode("2m");
+	}
+	else if (beatCounter == 24) {
+		music.setChord({0, 4, 7, 10}, 7);
+	}
+
+	// Play beat
+	//metronome.play();
+	if (beatCounter % 2 == 0) {
+		music.playChordBase("Bass");
+	}
+	if (beatCounter % 4 == 0) {
+		//music.playChord("Complete");
+	}
+
+	if (beatCounter >= 26 && beatCounter <= 29) {
+		music.playRandomNote("Complete");
+	}
 }
 
 void PlayState::doInputFromBuffers() {
@@ -251,8 +289,10 @@ void PlayState::doInputFromBuffers() {
 		for (Enemy &enemy : enemies) {
 			if (enemy.alive && enemy.side == direction && enemy.getDelay() <= OK_WINDOW) {
 				if (swordBuffer > 0) {
+					swordBuffer = 0;
 					enemy.alive = false;
 					createPoof(enemy.getPosition() + sf::Vector2f(0, -6));
+					music.playRandomNote("Sword");
 				}
 			}
 		}
