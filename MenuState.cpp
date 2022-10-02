@@ -7,6 +7,10 @@
 void MenuState::init() {
 	trans.cover(true);
 	trans.reveal();
+
+	music.openFromFile("Resource/Music/Menu.ogg");
+	music.setLoop(true);
+	music.play();
 }
 
 void MenuState::gotEvent(sf::Event event) {
@@ -15,6 +19,9 @@ void MenuState::gotEvent(sf::Event event) {
 			if (trans.isRevealed()) {
 				transitioning = true;
 				trans.cover();
+				music.stop();
+				getGame()->playGlobalSound("Resource/Sound/Start.wav");
+				flashTimer = 13;
 			}
 		}
 	}
@@ -27,7 +34,7 @@ void MenuState::update(sf::Time elapsed) {
 	}
 
 	trans.update(elapsed);
-	if (transitioning && trans.isCovered()) {
+	if (transitioning && trans.isCovered() && flashTimer <= 10) {
 		getGame()->changeState(new PlayState());
 	}
 }
