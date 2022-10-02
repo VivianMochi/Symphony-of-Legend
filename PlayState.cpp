@@ -2,10 +2,30 @@
 
 #include "BitmapText.hpp"
 #include "ResourceManager.hpp"
+#include "MenuState.hpp"
 
 #include <iostream>
 
+Level::Level(std::string name, sf::Color color, std::string beatPattern, std::string instrument) {
+	this->name = name;
+	this->color = color;
+	this->beatPattern = beatPattern;
+	this->instrument = instrument;
+}
+
 void PlayState::init() {
+	// Construct levels
+	levels.emplace_back("Beach", sf::Color(0xD3C1A5FF), "C---", "Forest");
+	levels.emplace_back("Fields", sf::Color(0x6FA870FF), "C000C202", "Forest");
+	levels.emplace_back("Forest", sf::Color(0x67A552FF), "C121C121", "Forest");
+	levels.emplace_back("Mountain", sf::Color(0x9294A0FF), "0--2--0-", "Mountain");
+	levels.emplace_back("Cave", sf::Color(0x897A91FF), "0-------", "Mountain");
+	levels.emplace_back("Desert", sf::Color(0xE2CF8EFF), "02-2-212", "Desert");
+	levels.emplace_back("Dunes", sf::Color(0xFFBF8EFF), "-0-0-012", "Desert");
+	levels.emplace_back("Ocean", sf::Color(0x9599DBFF), "02----2-", "Ocean");
+	levels.emplace_back("Clouds", sf::Color(0xAED9F9FF), "01201212", "Ocean");
+	levels.emplace_back("Space", sf::Color(0x4F55A8FF), "1-0-1-0-2-0-2-0-", "Space");
+
 	breakMessages.resize(4);
 
 	legend.setState(this);
@@ -52,6 +72,11 @@ void PlayState::gotEvent(sf::Event event) {
 		if (event.key.code == sf::Keyboard::Q) {
 			music.playRandomNote("Sword");
 		}
+		else if (event.key.code == sf::Keyboard::Num1) {
+			breakTime = true;
+			beatCounter = 29;
+			trans.cover(true);
+		}
 	}
 }
 
@@ -84,6 +109,11 @@ void PlayState::update(sf::Time elapsed) {
 		poofs.clear();
 		if (legend.alive) {
 			level += 1;
+			if (level >= levels.size()) {
+				// Todo: show game end
+				level = levels.size() - 1;
+				getGame()->changeState(new MenuState());
+			}
 		}
 		totalAttacks = 0;
 		perfect = 0;
@@ -120,7 +150,7 @@ void PlayState::update(sf::Time elapsed) {
 void PlayState::render(sf::RenderWindow &window) {
 	// Render backdrop
 	sf::RectangleShape backdrop(sf::Vector2f(240, 135));
-	backdrop.setFillColor(sf::Color(130, 190, 80));
+	backdrop.setFillColor(levels[level].color);
 	window.draw(backdrop);
 
 	// Render entities
@@ -136,7 +166,7 @@ void PlayState::render(sf::RenderWindow &window) {
 	}
 
 	// Render level name
-	BitmapText text(rm::loadTexture("Resource/Image/Font.png"), "Level " + std::to_string(level));
+	BitmapText text(rm::loadTexture("Resource/Image/Font.png"), "Level " + std::to_string(level + 1) + ": " + levels[level].name);
 	text.setColor(sf::Color::White);
 	text.setPosition(2, 2);
 	window.draw(text);
@@ -181,6 +211,7 @@ void PlayState::createEnemy(std::string type, int direction) {
 		enemies.emplace_back(type);
 		enemies.back().setState(this);
 		sf::Vector2f offsetPosition = getDirectionVector(direction) * (getDirectionVector(direction).x == 0 ? 40.0f : 60.0f);
+		offsetPosition += sf::Vector2f(std::rand() % 20 - 10, std::rand() % 20 - 10);
 		enemies.back().setPosition(LEGEND_POSITION + offsetPosition);
 		enemies.back().side = direction;
 		enemies.back().facing = direction + 2;
@@ -260,17 +291,15 @@ void PlayState::onBeat() {
 	}
 
 	// Play beat
-	std::string beatPattern = "0--2--0-";
-	beatPattern = "0-1-2-0-";
-	beatPattern = "C000C202";
+	std::string beatPattern = levels[level].beatPattern;
 	if (beatPattern != "" && (legend.alive || beatCounter >= 24)) {
 		int index = beatCounter % beatPattern.size();
 		if (beatPattern[index] == 'C') {
 			music.playChord("Complete");
-			music.playChordNote(areaName);
+			music.playChordNote(levels[level].instrument);
 		}
 		else if (beatPattern[index] != '-') {
-			music.playChordNote(areaName, beatPattern[index] - '0');
+			music.playChordNote(levels[level].instrument, beatPattern[index] - '0');
 		}
 	}
 
@@ -290,7 +319,7 @@ void PlayState::onBeat() {
 		breakTime = true;
 		trans.cover();
 		if (legend.alive) {
-			breakMessages[0] = "Level " + std::to_string(level) + " Complete!";
+			breakMessages[0] = levels[level].name + " Complete!";
 			breakMessages[1] = "Perfect: " + std::to_string(perfect) + " of " + std::to_string(totalAttacks);
 			breakMessages[2] = "Misses: " + std::to_string(misses);
 			breakMessages[3] = "Moving on!";
@@ -304,9 +333,12 @@ void PlayState::onBeat() {
 	}
 
 	// Spawn enemies
-	std::vector<std::string> enemyTypes = { "Crab", "Bird" };
+	std::vector<std::string> enemyTypes = { "Crab" };
+	if (level >= 2) {
+		enemyTypes.push_back("Bird");
+	}
 	if (!breakTime) {
-		if (beatCounter % 8 <= 3 && std::rand() % 4 && beatCounter < 24) {
+		if (beatCounter % 8 <= 3 && (std::rand() % 4 <= level) && beatCounter < 24) {
 			createEnemy(enemyTypes[std::rand() % enemyTypes.size()], std::rand() % 4);
 		}
 	}

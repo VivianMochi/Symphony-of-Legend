@@ -15,6 +15,16 @@ const float PERFECT_WINDOW = 0.05;
 const sf::Vector2f LEGEND_POSITION(120, 74);
 const float INPUT_BUFFER_TIME = 0.15;
 
+struct Level {
+	Level(std::string name, sf::Color color = sf::Color::Black, std::string beatPattern = "0-0-", std::string instrument = "");
+
+	std::string name = "";
+	sf::Color color = sf::Color::Black;
+	std::string beatPattern;
+	std::string instrument;
+	std::vector<std::vector<int>> chords;
+};
+
 class PlayState : public State {
 public:
 	virtual void init() override;
@@ -39,8 +49,8 @@ private:
 	void attack(int type = 0);
 	void doBufferInput();
 
-	int level = 1;
-	std::string areaName = "Mountain";
+	std::vector<Level> levels;
+	int level = 0;
 	int totalAttacks = 0;
 	int perfect = 0;
 	int misses = 0;

@@ -10,7 +10,7 @@ void MenuState::init() {
 
 	music.openFromFile("Resource/Music/Menu.ogg");
 	music.setLoop(true);
-	music.play();
+	//music.play();
 }
 
 void MenuState::gotEvent(sf::Event event) {
