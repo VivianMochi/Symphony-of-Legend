@@ -21,9 +21,6 @@ Game::Game() {
 
 	// Show the welcome message
 	std::cout << "\n  Welcome to Symphony of Legend!\n";
-	std::cout << "\n  Here are some tips:\n";
-	std::cout << "    - Tips go here...\n";
-
 	std::cout << "\n  Debug messages are printed here:\n";
 
 	// Initial state

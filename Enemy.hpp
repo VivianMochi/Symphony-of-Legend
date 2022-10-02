@@ -24,6 +24,9 @@ private:
 
 	PlayState *state = nullptr;
 
+	std::string type = "Crab";
+	int shield = 0;
+
 	float maxDelay = 20;
 	float delay = 20;
 	sf::Vector2f velocity;

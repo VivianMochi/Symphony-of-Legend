@@ -334,11 +334,23 @@ void PlayState::onBeat() {
 
 	// Spawn enemies
 	std::vector<std::string> enemyTypes = { "Crab" };
-	if (level >= 2) {
+	if (level >= 1) {
+		enemyTypes.push_back("Hedgehog");
+	}
+	if (level >= 3) {
 		enemyTypes.push_back("Bird");
 	}
-	if (!breakTime) {
-		if (beatCounter % 8 <= 3 && (std::rand() % 4 <= level) && beatCounter < 24) {
+	if (level >= 5) {
+		//enemyTypes.push_back("Worm");
+	}
+	if (level >= 7) {
+		//enemyTypes.push_back("Fish");
+	}
+	if (level >= 9) {
+		//enemyTypes.push_back("Space");
+	}
+	if (!breakTime && (level > 0 || beatCounter >= 8)) {
+		if (beatCounter % 8 <= 3 && (std::rand() % 9 <= (level / 2) + 2) && beatCounter < 24) {
 			createEnemy(enemyTypes[std::rand() % enemyTypes.size()], std::rand() % 4);
 		}
 	}

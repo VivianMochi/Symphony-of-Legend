@@ -4,6 +4,7 @@
 #include "ResourceManager.hpp"
 
 Enemy::Enemy(std::string type) {
+	this->type = type;
 	sprite.setTexture(rm::loadTexture("Resource/Image/" + type + ".png"));
 	sprite.setOrigin(6, 12);
 
@@ -12,6 +13,10 @@ Enemy::Enemy(std::string type) {
 		maxDelay = 6 * BEAT_TIME;
 	}
 	this->delay = maxDelay;
+
+	if (type == "Hedgehog") {
+		shield = 1;
+	}
 }
 
 void Enemy::setState(PlayState *state) {
@@ -43,7 +48,7 @@ void Enemy::update(sf::Time elapsed) {
 		}
 
 		// Update animation
-		if (delay <= maxDelay / 2) {
+		if (delay <= maxDelay / 2 || type == "Bird") {
 			frameTimer -= elapsed.asSeconds();
 			if (frameTimer <= 0) {
 				frameTimer += BEAT_TIME / 2.0f;
@@ -72,8 +77,17 @@ void Enemy::update(sf::Time elapsed) {
 void Enemy::hit(int damageType) {
 	if (state) {
 		if (damageType == 0) {
-			alive = false;
-			state->createPoof(getPosition() + sf::Vector2f(0, -6));
+			if (shield > 0) {
+				shield -= 1;
+				move(state->getDirectionVector(side) * 10.0f);
+				velocity = sf::Vector2f();
+				delay += BEAT_TIME * 4;
+				maxDelay = BEAT_TIME * 4;
+			}
+			else {
+				alive = false;
+				state->createPoof(getPosition() + sf::Vector2f(0, -6));
+			}
 		}
 		else if (damageType == 1) {
 			state->createPoof(getPosition() + sf::Vector2f(0, -6), 8);
