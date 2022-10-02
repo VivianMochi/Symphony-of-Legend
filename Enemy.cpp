@@ -3,11 +3,14 @@
 #include "PlayState.hpp"
 #include "ResourceManager.hpp"
 
-Enemy::Enemy(std::string type, float delay) {
+Enemy::Enemy(std::string type) {
 	sprite.setTexture(rm::loadTexture("Resource/Image/" + type + ".png"));
 	sprite.setOrigin(6, 12);
 
-	maxDelay = delay;
+	maxDelay = 4 * BEAT_TIME;
+	if (type == "Bird") {
+		maxDelay = 6 * BEAT_TIME;
+	}
 	this->delay = maxDelay;
 }
 

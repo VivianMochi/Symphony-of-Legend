@@ -6,7 +6,7 @@ class PlayState;
 
 class Enemy : public sf::Drawable, public sf::Transformable {
 public:
-	Enemy(std::string type = "Crab", float delay = 20);
+	Enemy(std::string type = "Crab");
 
 	void setState(PlayState *state);
 	void update(sf::Time elapsed);

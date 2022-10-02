@@ -167,11 +167,12 @@ void PlayState::render(sf::RenderWindow &window) {
 	//window.draw(text);
 }
 
-void PlayState::createEnemy(std::string type, int direction, float delayBeats) {
+void PlayState::createEnemy(std::string type, int direction) {
 	if (legend.alive) {
-		enemies.emplace_back(type, delayBeats * BEAT_TIME);
+		enemies.emplace_back(type);
 		enemies.back().setState(this);
-		enemies.back().setPosition(LEGEND_POSITION + getDirectionVector(direction) * 60.0f);
+		sf::Vector2f offsetPosition = getDirectionVector(direction) * (getDirectionVector(direction).x == 0 ? 40.0f : 60.0f);
+		enemies.back().setPosition(LEGEND_POSITION + offsetPosition);
 		enemies.back().side = direction;
 		enemies.back().facing = direction + 2;
 		if (enemies.back().facing >= 4) {
@@ -282,20 +283,8 @@ void PlayState::onBeat() {
 	// Spawn enemies
 	std::vector<std::string> enemyTypes = { "Crab", "Bird" };
 	if (!breakTime) {
-		/*
-		if (beatCounter == 4) {
-			createEnemy("Crab", 1, 8);
-		}
-		else if (beatCounter == 16) {
-			createEnemy("Crab", 1, 4);
-		}
-		else if (beatCounter == 17) {
-			createEnemy("Crab", 3, 4);
-		}
-		*/
-
 		if (beatCounter % 8 <= 3 && std::rand() % 4 && beatCounter < 24) {
-			createEnemy("Crab", std::rand() % 4, 4);
+			createEnemy(enemyTypes[std::rand() % enemyTypes.size()], std::rand() % 4);
 		}
 	}
 }

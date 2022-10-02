@@ -22,7 +22,7 @@ public:
 	virtual void update(sf::Time elapsed) override;
 	virtual void render(sf::RenderWindow &window) override;
 
-	void createEnemy(std::string type, int direction, float delayBeats = 4);
+	void createEnemy(std::string type, int direction);
 	void createPoof(sf::Vector2f position, float diameter = 12);
 
 	void loseLevel();
