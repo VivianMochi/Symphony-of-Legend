@@ -69,6 +69,24 @@ void PlayState::gotEvent(sf::Event event) {
 			doBufferInput();
 		}
 
+		// Do aim-attack keys
+		if (event.key.code == sf::Keyboard::W) {
+			legend.turn(0);
+			attack(0);
+		}
+		else if (event.key.code == sf::Keyboard::D) {
+			legend.turn(1);
+			attack(0);
+		}
+		else if (event.key.code == sf::Keyboard::S) {
+			legend.turn(2);
+			attack(0);
+		}
+		else if (event.key.code == sf::Keyboard::A) {
+			legend.turn(3);
+			attack(0);
+		}
+
 		// DEBUG
 		/*
 		if (event.key.code == sf::Keyboard::Q) {
