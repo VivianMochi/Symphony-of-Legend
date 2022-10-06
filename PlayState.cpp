@@ -188,10 +188,20 @@ void PlayState::render(sf::RenderWindow &window) {
 		window.draw(attackSprite);
 	}
 
-	// Render level name
+	// Render hud
 	BitmapText text(rm::loadTexture("Resource/Image/Font.png"), "Level " + std::to_string(level + 1) + ": " + levels[level].name);
 	text.setColor(sf::Color::White);
 	text.setPosition(2, 2);
+
+	sf::RectangleShape hudBox(sf::Vector2f(text.getWidth() + 4, 16));
+	hudBox.setFillColor(sf::Color(0x40404040));
+	hudBox.setPosition(sf::Vector2f(0, -4));
+	sf::Sprite hudEdge(rm::loadTexture("Resource/Image/Hud.png"), sf::IntRect(0, 0, 8, 16));
+	hudEdge.setColor(sf::Color(0x40404040));
+	hudEdge.setPosition(hudBox.getPosition() + sf::Vector2f(hudBox.getSize().x, 0));
+
+	window.draw(hudBox);
+	window.draw(hudEdge);
 	window.draw(text);
 
 	// Render transition

@@ -59,6 +59,7 @@ void MenuState::preload() {
 	rm::loadTexture("Resource/Image/Bird.png");
 	rm::loadTexture("Resource/Image/Crab.png");
 	rm::loadTexture("Resource/Image/Hedgehog.png");
+	rm::loadTexture("Resource/Image/Hud.png");
 	rm::loadTexture("Resource/Image/Legend.png");
 
 	rm::loadSoundBuffer("Resource/Sound/Death.wav");
