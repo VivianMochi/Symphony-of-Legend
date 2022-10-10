@@ -15,6 +15,20 @@ const float PERFECT_WINDOW = 0.05;
 const sf::Vector2f LEGEND_POSITION(120, 74);
 const float INPUT_BUFFER_TIME = 0.15;
 
+struct EnemySpawn {
+	float beat = 0;
+	std::string type = "Crab";
+	int side = 0;
+};
+
+struct SpawnSettings {
+	float spawnStart = 0;
+	float attackStart = 4;
+	float attackEnd = 24;
+	bool allowDoubles = false;
+	bool allowSpawnAnytime = false;
+};
+
 struct Level {
 	Level(std::string name, sf::Color color = sf::Color::Black, std::string beatPattern = "0-0-", std::string instrument = "");
 
@@ -40,8 +54,12 @@ public:
 	// Helpers
 	bool isNearBeat(float window = 0.05, bool onlyAfter = false);
 	sf::Vector2f getDirectionVector(int direction);
+	std::vector<float> getEnemyDelays(std::string enemyType);
 
 private:
+	void generateSpawns();
+	bool testEnemyFit(std::string enemyType, float attackBeat, SpawnSettings settings);
+
 	void onBeat();
 
 	// 0 = sword
@@ -50,6 +68,7 @@ private:
 	void doBufferInput();
 
 	std::vector<Level> levels;
+	std::vector<EnemySpawn> spawns;
 	int level = 0;
 	int totalAttacks = 0;
 	int perfect = 0;

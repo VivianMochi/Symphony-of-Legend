@@ -25,6 +25,7 @@ void PlayState::init() {
 	levels.emplace_back("Ocean", sf::Color(0x9599DBFF), "02----2-", "Ocean");
 	levels.emplace_back("Clouds", sf::Color(0xAED9F9FF), "01201212", "Ocean");
 	levels.emplace_back("Space", sf::Color(0x4F55A8FF), "1-0-1-0-2-0-2-0-", "Space");
+	generateSpawns();
 
 	breakMessages.resize(4);
 
@@ -142,6 +143,7 @@ void PlayState::update(sf::Time elapsed) {
 		perfect = 0;
 		misses = 0;
 		legend.alive = true;
+		generateSpawns();
 		trans.reveal();
 	}
 
@@ -306,6 +308,110 @@ sf::Vector2f PlayState::getDirectionVector(int direction) {
 	return sf::Vector2f(0, 0);
 }
 
+std::vector<float> PlayState::getEnemyDelays(std::string enemyType) {
+	if (enemyType == "Crab") {
+		return { 4 };
+	}
+	else if (enemyType == "Hedgehog") {
+		return { 4, 8 };
+	}
+	else if (enemyType == "Bird") {
+		return { 6 };
+	}
+	else {
+		return { 4 };
+	}
+}
+
+void PlayState::generateSpawns() {
+	spawns.clear();
+
+	// Get valid enemy types
+	// Todo: Add spawn weights so that we don't need to add duplicates
+	// We are weighting hedgehogs at 1/2 because they take double the hits to kill
+	std::vector<std::string> enemyTypes = { "Crab", "Crab" };
+	if (level >= 3) {
+		enemyTypes.push_back("Hedgehog");
+	}
+	if (level >= 6) {
+		enemyTypes.push_back("Bird");
+		enemyTypes.push_back("Bird");
+	}
+
+	// Spawn settings
+	SpawnSettings settings;
+	if (level == 0) {
+		settings.spawnStart = 8;
+	}
+	if (level >= 8) {
+		settings.allowDoubles = true;
+	}
+	if (level >= 9) {
+		settings.allowSpawnAnytime = true;
+	}
+	
+	// Calculate spawn times
+	for (int i = settings.attackEnd; i >= settings.attackStart; i--) {
+		// Spawn chance
+		if (std::rand() % 20 <= level + 8) {
+			// Trim out enemy types that won't properly fit into this beat
+			std::vector<std::string> validEnemyTypes = enemyTypes;
+			auto iter = validEnemyTypes.begin();
+			while (iter != validEnemyTypes.end()) {
+				if (!testEnemyFit(*iter, i, settings)) {
+					iter = validEnemyTypes.erase(iter);
+				}
+				else {
+					iter++;
+				}
+			}
+
+			if (!validEnemyTypes.empty()) {
+				// Construct spawn
+				EnemySpawn spawn;
+				spawn.type = validEnemyTypes[std::rand() % validEnemyTypes.size()];
+				spawn.beat = i - getEnemyDelays(spawn.type).back();
+				spawn.side = std::rand() % 4;
+				spawns.push_back(spawn);
+
+				// Double hit chance
+				if (settings.allowDoubles && spawn.type != "Bird" && std::rand() % 10 == 0) {
+					spawn.type = "Bird";
+					spawn.beat = i - getEnemyDelays(spawn.type).back();
+					spawns.push_back(spawn);
+				}
+			}
+		}
+	}
+}
+
+bool PlayState::testEnemyFit(std::string enemyType, float attackBeat, SpawnSettings settings) {
+	// Check spawn restrictions
+	float spawnBeat = attackBeat - getEnemyDelays(enemyType).back();
+	if (spawnBeat < settings.spawnStart) {
+		return false;
+	}
+	if (std::fmod(spawnBeat, 8) >= 4 && !settings.allowSpawnAnytime) {
+		return false;
+	}
+
+	// Reserve used beats
+	std::set<float> reserved;
+	for (EnemySpawn &spawn : spawns) {
+		for (float time : getEnemyDelays(spawn.type)) {
+			reserved.emplace(spawn.beat + time);
+		}
+	}
+
+	// Determine if overlap exists
+	for (float time : getEnemyDelays(enemyType)) {
+		if (reserved.count(spawnBeat + time) != 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void PlayState::onBeat() {
 	// Adjust chord progression
 	if (beatCounter == 0) {
@@ -373,27 +479,11 @@ void PlayState::onBeat() {
 	}
 
 	// Spawn enemies
-	std::vector<std::string> enemyTypes = { "Crab" };
-	if (level >= 3) {
-		// Used to be >= 1
-		enemyTypes.push_back("Hedgehog");
-	}
-	if (level >= 6) {
-		// Used to be >= 3
-		enemyTypes.push_back("Bird");
-	}
-	if (level >= 5) {
-		//enemyTypes.push_back("Worm");
-	}
-	if (level >= 7) {
-		//enemyTypes.push_back("Fish");
-	}
-	if (level >= 9) {
-		//enemyTypes.push_back("Space");
-	}
-	if (!breakTime && (level > 0 || beatCounter >= 8)) {
-		if (beatCounter % 8 <= 3 && (std::rand() % 6 <= (level / 2) + 2) && beatCounter < 24) {
-			createEnemy(enemyTypes[std::rand() % enemyTypes.size()], std::rand() % 4);
+	if (!breakTime) {
+		for (EnemySpawn &spawn : spawns) {
+			if (beatCounter == spawn.beat) {
+				createEnemy(spawn.type, spawn.side);
+			}
 		}
 	}
 }
